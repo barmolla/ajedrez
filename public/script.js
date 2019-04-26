@@ -1,14 +1,14 @@
 // IMPORTS
-const { 
-  dibujarTablero, 
-  dibujarPiezas, 
+const {
+  dibujarTablero,
+  dibujarPiezas,
   crearMatrizTablero
- } = require("utilitarios/fn-tablero.js");
-const { 
-  piezas, 
+} = require('./utilitarios/fn-tablero.js');
+const {
+  piezas,
   obtenerPosicionesIniciales
- } = require("utilitarios/fn-piezas.js");
-const Funciones = require("utilitarios/fn-utils.js");
+} = require('./utilitarios/fn-piezas.js');
+const Funciones = require('./utilitarios/fn-utils.js');
 
 let turno = "blanco";
 const historial = [];
@@ -37,7 +37,7 @@ const cbJugar = ev => {
   else {
     document.querySelector(".mensaje").style.display = "block";
     document.querySelector(".mensaje").innerHTML = "Turno de color " + turno;
-    setTimeout(()=> { 
+    setTimeout(()=> {
       document.querySelector(".mensaje").style.display = "none";
     }, 3000);
   }
@@ -71,7 +71,7 @@ const moverPieza = (td) => {
   };
 
   if (verificarValidez(posicionFutura) && verificarPosicionLibre(posicionFutura)) {
-    (turno === "blanco") ? turno = "negro" : turno = "blanco";
+    turno = (turno === "blanco") ? "negro" : "blanco";
     matrizTablero[posicionFutura.x][posicionFutura.y].append(jugadaPrevia.pieza);
     posiciones[jugadaPrevia.posicion.x][jugadaPrevia.posicion.y] = undefined;
     posiciones[posicionFutura.x][posicionFutura.y] = {
@@ -86,7 +86,7 @@ const moverPieza = (td) => {
 let tdsARevertir = [];
 const revertirColores = () => {
   if (tdsARevertir.length > 0) tdsARevertir.forEach(obj => matrizTablero[obj.x][obj.y].style.backgroundColor = obj.color);
-  
+
   tdsARevertir = [];
 };
 
@@ -99,13 +99,13 @@ const jugadaPrevia = {
   pieza: undefined,
   tipo: undefined,
   color: undefined,
-  posicion: {}, 
+  posicion: {},
   posicionesCalculadas: []
 };
 
 const calcularMovimientos = (elemento) => {
   const pieza = elemento.dataset.tipo;
-  
+
   const td = elemento.parentNode;
   const posicionActual = {
     x: parseInt(td.dataset.x),
@@ -122,15 +122,15 @@ const calcularMovimientos = (elemento) => {
       const posiblesMovimientos = [],
             esBlanco = jugadaPrevia.color === "blanco",
             _x1 = esBlanco ? -1 : 1;
-      
-      posiblesMovimientos.push({ 
-        x: _x1, 
-        y: posicionActual.y 
+
+      posiblesMovimientos.push({
+        x: _x1,
+        y: posicionActual.y
       });
 
       if (posicionesIniciales[posicionActual.x][posicionActual.y] !== undefined) {
-        posiblesMovimientos.push({ 
-          x: (esBlanco) ? -2 : 2, 
+        posiblesMovimientos.push({
+          x: (esBlanco) ? -2 : 2,
           y: posicionActual.y
         });
       }
@@ -143,14 +143,14 @@ const calcularMovimientos = (elemento) => {
       [
         { x:  1, y:  0 },
         { x:  0, y:  1 },
-        { x: -1, y:  0 }, 
+        { x: -1, y:  0 },
         { x:  0, y: -1 },
         { x:  1, y:  1 },
         { x:  1, y: -1 },
-        { x: -1, y:  1 }, 
+        { x: -1, y:  1 },
         { x: -1, y: -1 }
-      ].forEach(({ x, y }) => calcularMovimientoRey({ 
-          x: posicionActual.x + x, 
+      ].forEach(({ x, y }) => calcularMovimientoRey({
+          x: posicionActual.x + x,
           y: posicionActual.y + y,
           })
         );
@@ -160,14 +160,14 @@ const calcularMovimientos = (elemento) => {
       [
         { x:  1, y:  0 },
         { x:  0, y:  1 },
-        { x: -1, y:  0 }, 
+        { x: -1, y:  0 },
         { x:  0, y: -1 },
         { x:  1, y:  1 },
         { x:  1, y: -1 },
-        { x: -1, y:  1 }, 
+        { x: -1, y:  1 },
         { x: -1, y: -1 }
-      ].forEach(({ x, y }) => calcularMovimientoReina({ 
-          x: posicionActual.x, 
+      ].forEach(({ x, y }) => calcularMovimientoReina({
+          x: posicionActual.x,
           y: posicionActual.y,
           deltaX: x,
           deltaY: y })
@@ -178,10 +178,10 @@ const calcularMovimientos = (elemento) => {
       [
         { x:  1, y:  0 },
         { x:  0, y:  1 },
-        { x: -1, y:  0 }, 
+        { x: -1, y:  0 },
         { x:  0, y: -1 }
-      ].forEach(({ x, y }) => calcularMovimientoTorre({ 
-          x: posicionActual.x, 
+      ].forEach(({ x, y }) => calcularMovimientoTorre({
+          x: posicionActual.x,
           y: posicionActual.y,
           deltaX: x,
           deltaY: y })
@@ -189,7 +189,7 @@ const calcularMovimientos = (elemento) => {
       break;
 
     case "caballo":
-      [ 
+      [
         { x: -1, y: -2 },
         { x:  1, y: -2 },
         { x: -1, y:  2 },
@@ -198,8 +198,8 @@ const calcularMovimientos = (elemento) => {
         { x:  2, y: -1 },
         { x: -2, y:  1 },
         { x:  2, y:  1 }
-        ].forEach(({ x, y }) => calcularMovimientoRey({ 
-          x: posicionActual.x + x, 
+        ].forEach(({ x, y }) => calcularMovimientoRey({
+          x: posicionActual.x + x,
           y: posicionActual.y + y,
           })
         );
@@ -209,15 +209,15 @@ const calcularMovimientos = (elemento) => {
         [
           { x:  1, y:  1 },
           { x:  1, y: -1 },
-          { x: -1, y:  1 }, 
+          { x: -1, y:  1 },
           { x: -1, y: -1 }
-        ].forEach(({ x, y }) => calcularMovimientoAlfil({ 
-            x: posicionActual.x, 
+        ].forEach(({ x, y }) => calcularMovimientoAlfil({
+            x: posicionActual.x,
             y: posicionActual.y,
             deltaX: x,
             deltaY: y })
           );
-        
+
       break;
   }
 };
@@ -253,8 +253,8 @@ tablero.addEventListener("click", cbJugar);
 
 document
   .querySelector("form")
-  .addEventListener("submit", e => { 
-    e.preventDefault(); 
+  .addEventListener("submit", e => {
+    e.preventDefault();
     document.querySelector("form").append("Registrado!");
     setTimeout(()=>{ document.querySelector("form").style.display = "none"; }, 3000);
   });

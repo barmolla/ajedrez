@@ -1,6 +1,9 @@
-const Funciones = require("utilitarios/fn-utils.js");
-const { piezas } = require("modelos/pieza.js");
+const Funciones = require('./fn-utils.js');
+const { piezas } = require('../modelos/pieza.js');
+console.log("piezas")
+console.log(piezas)
 const crearPiezas = (...piezas) => piezas.map(({ tipo, color, img }) => Funciones.clonar()({ tipo, color, img }));
+
 const clonarPiezas = (resultado = []) => (veces = 1) => ({ tipo, color, img }) => {
   if (! (veces === resultado.length)) {
     resultado.push(Funciones.clonar()({ tipo, color, img }));
@@ -27,7 +30,7 @@ const obtenerPiezas = () => {
 
   const piezasBlancas = Funciones.matrizAVector(blancas.map(pieza => clonarPiezas()(piezasACrear[pieza.tipo])(pieza)));
   const piezasNegras  = Funciones.matrizAVector( negras.map(pieza => clonarPiezas()(piezasACrear[pieza.tipo])(pieza)));
-  
+
   return piezasBlancas.concat(piezasNegras);
 };
 
@@ -44,7 +47,9 @@ const obtenerPosicionesIniciales = () => {
           ];
 };
 
-module.exports = { 
+/*module.exports = {
   piezas: obtenerPiezas(),
   obtenerPosicionesIniciales
-};
+};*/
+exports.piezas = obtenerPiezas()
+exports.obtenerPosicionesIniciales = obtenerPosicionesIniciales

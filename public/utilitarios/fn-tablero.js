@@ -1,5 +1,5 @@
 // IMPORTS
-const Funciones = require("utilitarios/fn-utils.js");
+const Funciones = require('../utilitarios/fn-utils.js');
 
 const dibujarTablero = donde => {
   const table = document.createElement("table");
@@ -7,12 +7,12 @@ const dibujarTablero = donde => {
   for (let x = 1; x < 9; x++) {
     const tr = document.createElement("tr");
     let seraBlanco = true;
-    
+
     if (x != 1 && x % 2 === 0) seraBlanco = false;
-    
+
     for (let y = 1; y < 9; y++) {
       const td = document.createElement("td");
-    
+
       // set real coords
       td.dataset.x = x - 1;
       td.dataset.y = y - 1;
@@ -63,7 +63,7 @@ const dibujarPiezas = (posiciones, piezas, matrizTablero) => {
       const pieza = piezas.find(pieza => pieza.tipo === tipo && pieza.color === color);
       const div = document.createElement("div");
 
-      div.setAttribute("style", 
+      div.setAttribute("style",
       `
         background-image: url('${pieza.img}');
         background-repeat: no-repeat;
@@ -79,4 +79,6 @@ const dibujarPiezas = (posiciones, piezas, matrizTablero) => {
     }
 };
 
-module.exports = { dibujarTablero, dibujarPiezas, crearMatrizTablero };
+exports.dibujarTablero = dibujarTablero
+exports.crearMatrizTablero = crearMatrizTablero
+exports.dibujarPiezas = dibujarPiezas

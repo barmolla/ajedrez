@@ -8,10 +8,16 @@ Array.prototype.dameClon = function() {
 	return [...(this.map(clonar()))];
 };
 
-module.exports = {
+/*module.exports = {
   matrizAVector,
   clonar,
   parseIntTodo,
   crear,
   congelar
-}
+}*/
+
+exports.matrizAVector = matrizAVector
+exports.clonar = clonar
+exports.parseIntTodo = parseIntTodo
+exports.crear = crear
+exports.congelar = congelar
