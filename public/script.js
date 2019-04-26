@@ -37,9 +37,7 @@ const cbJugar = ev => {
   else {
     document.querySelector(".mensaje").style.display = "block";
     document.querySelector(".mensaje").innerHTML = "Turno de color " + turno;
-    setTimeout(()=> {
-      document.querySelector(".mensaje").style.display = "none";
-    }, 3000);
+    setTimeout(()=> document.querySelector(".mensaje").style.display = "none", 3000);
   }
 };
 
@@ -119,14 +117,24 @@ const calcularMovimientos = (elemento) => {
 
   switch(pieza) {
     case "peon":
-      const posiblesMovimientos = [],
-            esBlanco = jugadaPrevia.color === "blanco",
+      const esBlanco = jugadaPrevia.color === "blanco",
             _x1 = esBlanco ? -1 : 1;
 
-      posiblesMovimientos.push({
-        x: _x1,
-        y: posicionActual.y
-      });
+      const posiblesMovimientos = [
+        {
+          x: posicionActual.x + _x1,
+          y: posicionActual.y - 1
+        },
+        {
+          x: posicionActual.x + _x1,
+          y: posicionActual.y + 1
+        }
+      ]
+      .filter(puedeTomar)
+      .filter(estaDentroTablero)
+      .map(({ x, y }) => Funciones.crear({ x: x - posicionActual.x, y }))
+
+      posiblesMovimientos.push({ x: _x1, y: posicionActual.y });
 
       if (posicionesIniciales[posicionActual.x][posicionActual.y] !== undefined) {
         posiblesMovimientos.push({

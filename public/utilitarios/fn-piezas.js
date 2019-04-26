@@ -1,7 +1,5 @@
 const Funciones = require('./fn-utils.js');
 const { piezas } = require('../modelos/pieza.js');
-console.log("piezas")
-console.log(piezas)
 const crearPiezas = (...piezas) => piezas.map(({ tipo, color, img }) => Funciones.clonar()({ tipo, color, img }));
 
 const clonarPiezas = (resultado = []) => (veces = 1) => ({ tipo, color, img }) => {
@@ -47,9 +45,5 @@ const obtenerPosicionesIniciales = () => {
           ];
 };
 
-/*module.exports = {
-  piezas: obtenerPiezas(),
-  obtenerPosicionesIniciales
-};*/
 exports.piezas = obtenerPiezas()
 exports.obtenerPosicionesIniciales = obtenerPosicionesIniciales
