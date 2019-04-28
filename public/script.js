@@ -96,7 +96,6 @@ const moverPieza = (td) => {
     historial.push({ pieza: jugadaPrevia.pieza, x: posicionFutura.x, y: posicionFutura.y })
   }
   jugadaPrevia.pieza = undefined
-  console.log("historial", historial)
 }
 
 let tdsARevertir = []

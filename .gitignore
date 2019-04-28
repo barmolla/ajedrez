@@ -3,3 +3,4 @@ package-lock.json
 .git
 public/bundle.js
 public/bundle.js.map
+.DS_Store
