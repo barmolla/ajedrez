@@ -66,6 +66,16 @@ const comerPieza = div => {
     td.removeChild(div)
     posiciones[posicionPiezaAmenazada.x][posicionPiezaAmenazada.y] = undefined
     moverPieza(td)
+
+    const ultimoMovimiento = historial.pop()
+
+    ultimoMovimiento.piezaComida = div
+    historial.push(ultimoMovimiento)
+
+    const piezaComidaEvento = new CustomEvent('piezaComida', { 'detail': ultimoMovimiento })
+
+    document.body.dispatchEvent(piezaComidaEvento)
+
   } else jugadaPrevia.pieza = undefined
 }
 
@@ -274,5 +284,14 @@ document
     document.querySelector('form').append('Registrado!')
     setTimeout(() => document.querySelector('form').style.display = 'none', 3000)
   })
+
+document.body.addEventListener('piezaComida', ({ detail }) => {
+  const color = detail.piezaComida.dataset.color === "negro" ? "negro" : "blanco"
+  const clase = `.historial-${color}`
+  console.log(`.historial-${color}`)
+  document
+    .querySelector(clase)
+    .append(detail.piezaComida)
+})
 
 console.clear()
