@@ -2,17 +2,24 @@
 <html>
 
   <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="recursos/css/style.css">
   </head>
 
   <body>
-      <form action="/action">
-      Correo electrónico: <input type="text" name="email" pattern="^([.a-z0-9]{3,32})@(gmail|outlook|yahoo|hotmail).([a-z]{2,3})$" title="Ingrese email válido!">
-<input type="submit">
-    </form>
     <div class="juego">
-      <div class="mensaje"></div>
+      <div class="mensaje">
+        <div class="caja">
+          <label></label>
+        </div>
+      </div>
+      <div class="tablero"></div>
     </div>
+    <form action="/action">
+    Correo electrónico: <input type="text" name="email" pattern="^([.a-z0-9]{3,32})@(gmail|outlook|yahoo|hotmail).([a-z]{2,3})$" title="Ingrese email válido!">
+<input type="submit">
+  </form>
+
     <script src="bundle.js"></script>
   </body>
 

@@ -1,8 +1,60 @@
 /* Styles go here */
+* {
+   text-transform: uppercase;
+   font-family: Arial,"Helvetica Neue",Helvetica,sans-serif;
+}
+
+body {
+   background-color: moccasin;
+}
 
 table tr td {
   width: 50px;
   height: 50px;
+}
+
+table {
+  display: inline-block;
+  border: 5px grey solid;
+}
+
+form {
+  text-align: center;
+}
+
+.alerta {
+  position: absolute;
+  margin: auto;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 25%;
+  height: 10%;
+  background-color: dimgrey;
+  border-radius: 5px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mostrar-mensaje {
+  position: absolute;
+  margin: auto;
+  width: 100%;
+  height: 100%;
+  background-color: black;
+  opacity: 0.9;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+.tablero {
+  text-align: center;
+  margin: auto;
 }
 
 .pieza {

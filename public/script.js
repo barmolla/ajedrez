@@ -1,97 +1,105 @@
 // IMPORTS
-const {
-  dibujarTablero,
-  dibujarPiezas,
-  crearMatrizTablero
-} = require('./utilitarios/fn-tablero.js');
-const {
-  piezas,
-  obtenerPosicionesIniciales
-} = require('./utilitarios/fn-piezas.js');
-const Funciones = require('./utilitarios/fn-utils.js');
+const { dibujarTablero, dibujarPiezas, crearMatrizTablero } = require('./utilitarios/fn-tablero.js')
+const { piezas, obtenerPosicionesIniciales } = require('./utilitarios/fn-piezas.js')
+const Funciones = require('./utilitarios/fn-utils.js')
 
-let turno = "blanco";
-const historial = [];
-const posicionesIniciales = obtenerPosicionesIniciales();
-const posiciones = posicionesIniciales.dameClon();
+let turno = 'blanco'
+const historial = []
+const posicionesIniciales = obtenerPosicionesIniciales()
+const posiciones = posicionesIniciales.dameClon()
 
-const contenedor = document.querySelector(".juego");
-const tablero = dibujarTablero(contenedor);
-const matrizTablero = crearMatrizTablero(tablero);
+const contenedor = document.querySelector('.tablero')
+const tablero = dibujarTablero(contenedor)
+const matrizTablero = crearMatrizTablero(tablero)
 
-dibujarPiezas(posicionesIniciales, piezas, crearMatrizTablero(tablero));
+dibujarPiezas(posicionesIniciales, piezas, crearMatrizTablero(tablero))
 
-const cbJugar = ev => {
-  const target = ev.target;
-  const nodeName = target.nodeName;
-  const huboSeleccion = jugadaPrevia.pieza !== undefined;
-  const esUnDiv = nodeName === "DIV";
-  const esUnTD = nodeName === "TD";
+const cbJugar = ({ target }) => {
+  const huboSeleccion = jugadaPrevia.pieza !== undefined
+  const esUnDiv = target.nodeName === 'DIV'
+  const esUnTD  = target.nodeName === 'TD'
 
-  revertirColores();
+  revertirColores()
   if (target.dataset.color === turno || jugadaPrevia.color === turno)
-    if (!huboSeleccion && esUnDiv) dibujarPosiblesMovimientos(target);
-    else if (huboSeleccion && esUnDiv && jugadaPrevia.pieza !== target) comerPieza(target);
-    else if (huboSeleccion && esUnTD) moverPieza(target);
-    else jugadaPrevia.pieza = undefined;
+    if (!huboSeleccion && esUnDiv) dibujarPosiblesMovimientos(target)
+    else if (huboSeleccion && esUnDiv && jugadaPrevia.pieza !== target) comerPieza(target)
+    else if (huboSeleccion && esUnTD) moverPieza(target)
+    else {
+      jugadaPrevia.pieza = undefined 
+      jugadaPrevia.color = undefined 
+    }
   else {
-    document.querySelector(".mensaje").style.display = "block";
-    document.querySelector(".mensaje").innerHTML = "Turno de color " + turno;
-    setTimeout(()=> document.querySelector(".mensaje").style.display = "none", 3000);
-  }
-};
+    const div = document.querySelector('.mensaje')
+    const caja = document.querySelector('.caja')
+    const label = document.querySelector('.mensaje label')
 
-const puedeTomar              = ({ x, y, color }) => !verificarPosicionLibre({ x, y }) && posiciones[x][y].color !== color;
-const estaDentroTablero       = ({ x, y }) => x >= 0 && y >= 0 && x <= 7 && y <= 7;
-const verificarValidez        = ({ x, y }) => jugadaPrevia.posicionesCalculadas.some(posicion => posicion.x === x && posicion.y === y);
-const verificarPosicionLibre  = ({ x, y }) => posiciones[x][y] === undefined;
-const verificarMovimiento     = ({ x, y }) => verificarValidez({ x, y }) && verificarPosicionLibre({ x, y });
+    div.style.display = 'block'
+    div.classList.add('mostrar-mensaje')
+    caja.classList.add('alerta')
+
+    caja.append(label)
+    label.innerHTML = 'Turno de color ' + turno
+
+    setTimeout(() => {
+      document.querySelector('.mensaje').style.display = 'none'
+      div.classList.remove('mostrar-mensaje')
+      caja.classList.remove('alerta')
+    }, 2000)
+  }
+}
+
+const puedeTomar              = ({ x, y, color }) => !verificarPosicionLibre({ x, y }) && posiciones[x][y].color !== color
+const estaDentroTablero       = ({ x, y }) => x >= 0 && y >= 0 && x <= 7 && y <= 7
+const verificarValidez        = ({ x, y }) => jugadaPrevia.posicionesCalculadas.some(posicion => posicion.x === x && posicion.y === y)
+const verificarPosicionLibre  = ({ x, y }) => posiciones[x][y] === undefined
+const verificarMovimiento     = ({ x, y }) => verificarValidez({ x, y }) && verificarPosicionLibre({ x, y })
 
 const comerPieza = div => {
-  const td = div.parentNode;
+  const td = div.parentNode
   const posicionPiezaAmenazada = {
     x: parseInt(td.dataset.x),
     y: parseInt(td.dataset.y)
-  };
+  }
 
   if (verificarValidez(posicionPiezaAmenazada) && puedeTomar({ x: posicionPiezaAmenazada.x, y: posicionPiezaAmenazada.y, color: jugadaPrevia.color })) {
-    console.log("comiendo");
-    td.removeChild(div);
-    posiciones[posicionPiezaAmenazada.x][posicionPiezaAmenazada.y] = undefined;
-    moverPieza(td);
-  } else jugadaPrevia.pieza = undefined;
+    console.log('comiendo')
+    td.removeChild(div)
+    posiciones[posicionPiezaAmenazada.x][posicionPiezaAmenazada.y] = undefined
+    moverPieza(td)
+  } else jugadaPrevia.pieza = undefined
 }
 
 const moverPieza = (td) => {
   const posicionFutura = {
     x: parseInt(td.dataset.x),
     y: parseInt(td.dataset.y)
-  };
+  }
 
   if (verificarValidez(posicionFutura) && verificarPosicionLibre(posicionFutura)) {
-    turno = (turno === "blanco") ? "negro" : "blanco";
-    matrizTablero[posicionFutura.x][posicionFutura.y].append(jugadaPrevia.pieza);
-    posiciones[jugadaPrevia.posicion.x][jugadaPrevia.posicion.y] = undefined;
+    turno = (turno === 'blanco') ? 'negro' : 'blanco'
+    matrizTablero[posicionFutura.x][posicionFutura.y].append(jugadaPrevia.pieza)
+    posiciones[jugadaPrevia.posicion.x][jugadaPrevia.posicion.y] = undefined
     posiciones[posicionFutura.x][posicionFutura.y] = {
       tipo: jugadaPrevia.tipo,
       color: jugadaPrevia.color
-    };
-    historial.push({ pieza: jugadaPrevia.pieza, x: posicionFutura.x, y: posicionFutura.y });
+    }
+    historial.push({ pieza: jugadaPrevia.pieza, x: posicionFutura.x, y: posicionFutura.y })
   }
-  jugadaPrevia.pieza = undefined;
+  jugadaPrevia.pieza = undefined
+  console.log("historial", historial)
 }
 
-let tdsARevertir = [];
+let tdsARevertir = []
 const revertirColores = () => {
-  if (tdsARevertir.length > 0) tdsARevertir.forEach(obj => matrizTablero[obj.x][obj.y].style.backgroundColor = obj.color);
+  if (tdsARevertir.length > 0) tdsARevertir.forEach(obj => matrizTablero[obj.x][obj.y].style.backgroundColor = obj.color)
 
-  tdsARevertir = [];
-};
+  tdsARevertir = []
+}
 
 const dibujarPosiblesMovimientos = elemento => {
-  jugadaPrevia.pieza = elemento;
-  calcularMovimientos(elemento);
-};
+  jugadaPrevia.pieza = elemento
+  calcularMovimientos(elemento)
+}
 
 const jugadaPrevia = {
   pieza: undefined,
@@ -99,26 +107,26 @@ const jugadaPrevia = {
   color: undefined,
   posicion: {},
   posicionesCalculadas: []
-};
+}
 
 const calcularMovimientos = (elemento) => {
-  const pieza = elemento.dataset.tipo;
+  const pieza = elemento.dataset.tipo
 
-  const td = elemento.parentNode;
+  const td = elemento.parentNode
   const posicionActual = {
     x: parseInt(td.dataset.x),
     y: parseInt(td.dataset.y)
-  };
+  }
 
-  jugadaPrevia.tipo = elemento.dataset.tipo;
-  jugadaPrevia.color = elemento.dataset.color;
-  jugadaPrevia.posicion = posicionActual;
-  jugadaPrevia.posicionesCalculadas = [];
+  jugadaPrevia.tipo = elemento.dataset.tipo
+  jugadaPrevia.color = elemento.dataset.color
+  jugadaPrevia.posicion = posicionActual
+  jugadaPrevia.posicionesCalculadas = []
 
   switch(pieza) {
-    case "peon":
-      const esBlanco = jugadaPrevia.color === "blanco",
-            _x1 = esBlanco ? -1 : 1;
+    case 'peon':
+      const esBlanco = jugadaPrevia.color === 'blanco',
+            _x1 = esBlanco ? -1 : 1
 
       const posiblesMovimientos = [
         {
@@ -134,20 +142,20 @@ const calcularMovimientos = (elemento) => {
       .filter(estaDentroTablero)
       .map(({ x, y }) => Funciones.crear({ x: x - posicionActual.x, y }))
 
-      posiblesMovimientos.push({ x: _x1, y: posicionActual.y });
+      posiblesMovimientos.push({ x: _x1, y: posicionActual.y })
 
       if (posicionesIniciales[posicionActual.x][posicionActual.y] !== undefined) {
         posiblesMovimientos.push({
           x: (esBlanco) ? -2 : 2,
           y: posicionActual.y
-        });
+        })
       }
 
-      posiblesMovimientos.forEach(({ x, y }) => calcularMovimientoPeon({ x: posicionActual.x + x, y }));
+      posiblesMovimientos.forEach(({ x, y }) => calcularMovimientoPeon({ x: posicionActual.x + x, y }))
 
-      break;
+      break
 
-    case "rey":
+    case 'rey':
       [
         { x:  1, y:  0 },
         { x:  0, y:  1 },
@@ -161,10 +169,10 @@ const calcularMovimientos = (elemento) => {
           x: posicionActual.x + x,
           y: posicionActual.y + y,
           })
-        );
-      break;
+        )
+      break
 
-    case "reina":
+    case 'reina':
       [
         { x:  1, y:  0 },
         { x:  0, y:  1 },
@@ -179,10 +187,10 @@ const calcularMovimientos = (elemento) => {
           y: posicionActual.y,
           deltaX: x,
           deltaY: y })
-        );
-      break;
+        )
+      break
 
-    case "torre":
+    case 'torre':
       [
         { x:  1, y:  0 },
         { x:  0, y:  1 },
@@ -193,10 +201,10 @@ const calcularMovimientos = (elemento) => {
           y: posicionActual.y,
           deltaX: x,
           deltaY: y })
-        );
-      break;
+        )
+      break
 
-    case "caballo":
+    case 'caballo':
       [
         { x: -1, y: -2 },
         { x:  1, y: -2 },
@@ -210,10 +218,10 @@ const calcularMovimientos = (elemento) => {
           x: posicionActual.x + x,
           y: posicionActual.y + y,
           })
-        );
-      break;
+        )
+      break
 
-    case "alfil":
+    case 'alfil':
         [
           { x:  1, y:  1 },
           { x:  1, y: -1 },
@@ -224,47 +232,47 @@ const calcularMovimientos = (elemento) => {
             y: posicionActual.y,
             deltaX: x,
             deltaY: y })
-          );
+          )
 
-      break;
+      break
   }
-};
+}
 
 const calcularMovimiento = ({ x, y }) => {
   if (estaDentroTablero({ x, y })) {
-    const tdAColorear = matrizTablero[x][y];
+    const tdAColorear = matrizTablero[x][y]
 
     tdsARevertir.push({ x: tdAColorear.dataset.x, y: tdAColorear.dataset.y, color: tdAColorear.style.backgroundColor })
-    jugadaPrevia.posicionesCalculadas.push({ x, y });
+    jugadaPrevia.posicionesCalculadas.push({ x, y })
 
     if (verificarPosicionLibre({ x, y })) {
-      tdAColorear.style.backgroundColor = "green";
+      tdAColorear.style.backgroundColor = 'green'
 
-      return true;
-    } else tdAColorear.style.backgroundColor = "red";
+      return true
+    } else tdAColorear.style.backgroundColor = 'red'
   }
-};
+}
 
-const calcularMovimientoPeon  = calcularMovimiento;
-const calcularMovimientoRey   = calcularMovimientoPeon;
+const calcularMovimientoPeon  = calcularMovimiento
+const calcularMovimientoRey   = calcularMovimientoPeon
 const calcularMovimientoAlfil = ({ x, y, deltaX, deltaY }) => {
   const _x = x + deltaX,
-        _y = y + deltaY;
+        _y = y + deltaY
 
-  if (calcularMovimiento({ x: _x, y: _y }) === true) calcularMovimientoAlfil({ x: _x, y: _y, deltaX, deltaY });
-};
-const calcularMovimientoCaballo = calcularMovimientoRey;
-const calcularMovimientoTorre   = calcularMovimientoAlfil;
-const calcularMovimientoReina   = calcularMovimientoTorre;
+  if (calcularMovimiento({ x: _x, y: _y }) === true) calcularMovimientoAlfil({ x: _x, y: _y, deltaX, deltaY })
+}
+const calcularMovimientoCaballo = calcularMovimientoRey
+const calcularMovimientoTorre   = calcularMovimientoAlfil
+const calcularMovimientoReina   = calcularMovimientoTorre
 
-tablero.addEventListener("click", cbJugar);
+tablero.addEventListener('click', cbJugar)
 
 document
-  .querySelector("form")
-  .addEventListener("submit", e => {
-    e.preventDefault();
-    document.querySelector("form").append("Registrado!");
-    setTimeout(()=>{ document.querySelector("form").style.display = "none"; }, 3000);
-  });
+  .querySelector('form')
+  .addEventListener('submit', e => {
+    e.preventDefault()
+    document.querySelector('form').append('Registrado!')
+    setTimeout(() => document.querySelector('form').style.display = 'none', 3000)
+  })
 
-console.clear();
+console.clear()
