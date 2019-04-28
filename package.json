@@ -9,6 +9,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "live": "nodemon server.js",
     "start": "node server.js",
+    "heroku-postbuild": "webpack -p", 
     "bundle-run-live": "webpack && npm run live",
     "bundle-live-dev": "npm run bundle-dev && npm run live",
     "bundle-live-prod": "npm run bundle-prod && npm run live"
