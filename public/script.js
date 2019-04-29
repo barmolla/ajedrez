@@ -287,7 +287,6 @@ document
 document.body.addEventListener('piezaComida', ({ detail }) => {
   const color = detail.piezaComida.dataset.color === "negro" ? "negro" : "blanco"
   const clase = `.historial-${color}`
-  console.log(`.historial-${color}`)
   document
     .querySelector(clase)
     .append(detail.piezaComida)
