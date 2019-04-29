@@ -61,22 +61,27 @@ const comerPieza = div => {
     y: parseInt(td.dataset.y)
   }
 
+  // agregar restricción para peón
+
   if (verificarValidez(posicionPiezaAmenazada) && puedeTomar({ x: posicionPiezaAmenazada.x, y: posicionPiezaAmenazada.y, color: jugadaPrevia.color })) {
     console.log('comiendo')
     td.removeChild(div)
     posiciones[posicionPiezaAmenazada.x][posicionPiezaAmenazada.y] = undefined
     moverPieza(td)
-
-    const ultimoMovimiento = historial.pop()
-
-    ultimoMovimiento.piezaComida = div
-    historial.push(ultimoMovimiento)
-
-    const piezaComidaEvento = new CustomEvent('piezaComida', { 'detail': ultimoMovimiento })
-
-    document.body.dispatchEvent(piezaComidaEvento)
+    actualizarHistorial(div)
 
   } else jugadaPrevia.pieza = undefined
+}
+
+const actualizarHistorial = div => {
+  const ultimoMovimiento = historial.pop()
+
+  ultimoMovimiento.piezaComida = div
+  historial.push(ultimoMovimiento)
+
+  const piezaComidaEvento = new CustomEvent('piezaComida', { 'detail': ultimoMovimiento })
+
+  document.body.dispatchEvent(piezaComidaEvento)
 }
 
 const moverPieza = (td) => {
@@ -285,7 +290,7 @@ document
   })
 
 document.body.addEventListener('piezaComida', ({ detail }) => {
-  const color = detail.piezaComida.dataset.color === "negro" ? "negro" : "blanco"
+  const color = detail.piezaComida.dataset.color
   const clase = `.historial-${color}`
   document
     .querySelector(clase)
