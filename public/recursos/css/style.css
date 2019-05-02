@@ -16,6 +16,7 @@ table tr td {
 table {
   display: inline-block;
   border: 5px grey solid;
+  border-radius: 5px;
 }
 
 form {
@@ -66,20 +67,25 @@ form {
   float: left;
 }
 
-.historial-blanco {
+.historial {
   height: 50px;
   max-height: 50px;
-  position: fixed;
-  top: 0;
-  right: 0;
   width: 20%;
+  border: 2px grey solid;
+  border-radius: 5px;
+  margin: 0 5px 0 5px;
+}
+
+.historial-blanco {
 }
 
 .historial-negro {
-  height: 50px;
-  max-height: 50px;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 20%;
+}
+
+.contenedor {
+  width: 100%;
+}
+
+.columna {
+  float: left;
 }

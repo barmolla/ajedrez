@@ -53,6 +53,17 @@ const estaDentroTablero       = ({ x, y }) => x >= 0 && y >= 0 && x <= 7 && y <=
 const verificarValidez        = ({ x, y }) => jugadaPrevia.posicionesCalculadas.some(posicion => posicion.x === x && posicion.y === y)
 const verificarPosicionLibre  = ({ x, y }) => posiciones[x][y] === undefined
 const verificarMovimiento     = ({ x, y }) => verificarValidez({ x, y }) && verificarPosicionLibre({ x, y })
+const componerCapturaToma     = ({ x, y, color }) => verificarCapturaAlPaso({ x, y, color }) || puedeTomar({ x, y, color })
+const verificarCapturaAlPaso  = ({ x, y, color }) => {
+  if (historial.length === 0) return false
+  const ultimoMovimiento = historial[historial.length - 1]
+
+  const qqqq = ultimoMovimiento.pieza.dataset.tipo === 'peon' && ultimoMovimiento.x === x && (ultimoMovimiento.y + 1 === y || ultimoMovimiento.y - 1 === y)
+  console.log("ultimo ",ultimoMovimiento)
+  console.log("actual ", x, y, color)
+  console.log(qqqq)
+  return qqqq
+}
 
 const comerPieza = div => {
   const td = div.parentNode
@@ -84,21 +95,20 @@ const actualizarHistorial = div => {
   document.body.dispatchEvent(piezaComidaEvento)
 }
 
+const cambiarTurno = () => turno = (turno === 'blanco') ? 'negro' : 'blanco'
 const moverPieza = (td) => {
+  const { pieza, tipo, color } = jugadaPrevia
   const posicionFutura = {
     x: parseInt(td.dataset.x),
     y: parseInt(td.dataset.y)
   }
 
-  if (verificarValidez(posicionFutura) && verificarPosicionLibre(posicionFutura)) {
-    turno = (turno === 'blanco') ? 'negro' : 'blanco'
-    matrizTablero[posicionFutura.x][posicionFutura.y].append(jugadaPrevia.pieza)
+  if (verificarMovimiento(posicionFutura)) {
+    cambiarTurno()
+    matrizTablero[posicionFutura.x][posicionFutura.y].append(pieza)
     posiciones[jugadaPrevia.posicion.x][jugadaPrevia.posicion.y] = undefined
-    posiciones[posicionFutura.x][posicionFutura.y] = {
-      tipo: jugadaPrevia.tipo,
-      color: jugadaPrevia.color
-    }
-    historial.push({ pieza: jugadaPrevia.pieza, x: posicionFutura.x, y: posicionFutura.y })
+    posiciones[posicionFutura.x][posicionFutura.y] = { tipo, color }
+    historial.push({ pieza, x: posicionFutura.x, y: posicionFutura.y })
   }
   jugadaPrevia.pieza = undefined
 }
@@ -145,15 +155,16 @@ const calcularMovimientos = (elemento) => {
       const posiblesMovimientos = [
         {
           x: posicionActual.x + _x1,
-          y: posicionActual.y - 1
+          y: posicionActual.y - 1,
+          color: jugadaPrevia.color
         },
         {
           x: posicionActual.x + _x1,
-          y: posicionActual.y + 1
+          y: posicionActual.y + 1,
+          color: jugadaPrevia.color
         }
       ]
       .filter(puedeTomar)
-      .filter(estaDentroTablero)
       .map(({ x, y }) => Funciones.crear({ x: x - posicionActual.x, y }))
 
       posiblesMovimientos.push({ x: _x1, y: posicionActual.y })

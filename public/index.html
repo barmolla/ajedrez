@@ -12,16 +12,18 @@
           <label></label>
         </div>
       </div>
-      <div class="tablero"></div>
     </div>
-    <div class="historial-blanco">
+    <div class="contenedor">
+      <div class="columna historial historial-negro"></div>
+      <div class="columna tablero"></div>
+      <div class="columna historial historial-blanco"></div>
+
     </div>
-    <div class="historial-negro">
-    </div>
-    <form action="/action">
-    Correo <input type="text" name="email" pattern="^([.a-z0-9]{3,32})@(gmail|outlook|yahoo|hotmail).([a-z]{2,3})$" title="Ingrese email válido!">
-<input type="submit">
-  </form>
+    <div class="form">
+      <form>
+        Correo <input type="text" name="email" pattern="^([.a-z0-9]{3,32})@(gmail|outlook|yahoo|hotmail).([a-z]{2,3})$" title="Ingrese email válido!">
+        <input type="submit">
+      </form>
 
     <script src="bundle.js"></script>
   </body>
