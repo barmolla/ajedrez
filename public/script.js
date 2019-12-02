@@ -188,12 +188,29 @@ const calcularMovimientos = (elemento) => {
       break
 
     case 'rey':
-      const reyJugado = historial.find(pieza => pieza.dataset.tipo === 'rey')
-      const torresJugadas = historial.filter(pieza => pieza.dataset.tipo === 'torre');
+      const esBlanco = jugadaPrevia.color === 'blanco'
+      const seMovioRey = historial.find(pieza => pieza.dataset.tipo === 'rey')
+      const torresMovidas = historial.filter(pieza => pieza.dataset.tipo === 'torre')
       const movimientosEnroque = []
 
-      if (!reyJugado) {
-        torresJugadas.forEach(torre => movimientosEnroque.push({ x: torre.x, y: torre.y}))
+      // 1_ El rey nunca se movió.
+      // 2_ La torre a usar en el enroque nunca fue movida.
+      // 3_ El rey no está en jaque.
+      // 4_ Ninguno de los escaques por los que el rey pasará o quedará, está bajo ataque.
+      // 5_ Los escaques entre el rey y la torre estén desocupados.
+      // 6_ El rey no termina en jaque (válido para cualquier movimiento legal).
+      if (!seMovioRey && torresMovidas.length === 0) {
+        if (esBlanco) {
+          movimientosEnroque.push({ x: 7, y: 0})
+          movimientosEnroque.push({ x: 7, y: 7})
+
+        } else {
+          movimientosEnroque.push({ x: 0, y: 0})
+          movimientosEnroque.push({ x: 0, y: 7})
+        }
+
+      } else if (!seMovioRey && torresMovidas.length === 1) {
+        movimientosEnroque.push({ x: torresMovidas[0].x, y: torresMovidas[0].y})
       }
 
       [
