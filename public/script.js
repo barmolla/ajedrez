@@ -21,14 +21,15 @@ const cbJugar = ({ target }) => {
 
   revertirColores()
   if (target.dataset.color === turno || jugadaPrevia.color === turno)
-    if (!huboSeleccion && esUnDiv) dibujarPosiblesMovimientos(target)
-    else if (huboSeleccion && esUnDiv && jugadaPrevia.pieza !== target) comerPieza(target)
-    else if (huboSeleccion && esUnTD) moverPieza(target)
+    if (!huboSeleccion && esUnDiv) dibujarPosiblesMovimientos(target) // sugerir movimientos
+    else if (huboSeleccion && esUnDiv && jugadaPrevia.pieza !== target) comerPieza(target) // comer pieza
+    else if (huboSeleccion && esUnTd) moverPieza(target) // movimiento libre
+    else if (huboSeleccion && jugadaPrevia.pieza.dataset.tipo === 'rey') moverPieza(target) // posible enroque
     else {
       jugadaPrevia.pieza = undefined 
       jugadaPrevia.color = undefined 
     }
-  else {
+  else { // jugador equivocado
     const div = document.querySelector('.mensaje')
     const caja = document.querySelector('.caja')
     const label = document.querySelector('.mensaje label')
@@ -53,6 +54,7 @@ const estaDentroTablero       = ({ x, y }) => x >= 0 && y >= 0 && x <= 7 && y <=
 const verificarValidez        = ({ x, y }) => jugadaPrevia.posicionesCalculadas.some(posicion => posicion.x === x && posicion.y === y)
 const verificarPosicionLibre  = ({ x, y }) => posiciones[x][y] === undefined
 const verificarMovimiento     = ({ x, y }) => verificarValidez({ x, y }) && verificarPosicionLibre({ x, y })
+//const verificarEnroque        = ({ x, y }) => verificarValidez({ x, y }) && verificarPosicionLibre({ x, y })
 const componerCapturaToma     = ({ x, y, color }) => verificarCapturaAlPaso({ x, y, color }) || puedeTomar({ x, y, color })
 const verificarCapturaAlPaso  = ({ x, y, color }) => {
   if (historial.length === 0) return false
@@ -103,6 +105,11 @@ const moverPieza = (td) => {
     y: parseInt(td.dataset.y)
   }
 
+  // evaluar tipo de movimiento especial
+  // enroque corto
+  // enroque largo
+  // captura peon al paso
+  //
   if (verificarMovimiento(posicionFutura)) {
     cambiarTurno()
     matrizTablero[posicionFutura.x][posicionFutura.y].append(pieza)
@@ -181,6 +188,14 @@ const calcularMovimientos = (elemento) => {
       break
 
     case 'rey':
+      const reyJugado = historial.find(pieza => pieza.dataset.tipo === 'rey')
+      const torresJugadas = historial.filter(pieza => pieza.dataset.tipo === 'torre');
+      const movimientosEnroque = []
+
+      if (!reyJugado) {
+        torresJugadas.forEach(torre => movimientosEnroque.push({ x: torre.x, y: torre.y}))
+      }
+
       [
         { x:  1, y:  0 },
         { x:  0, y:  1 },
@@ -189,7 +204,8 @@ const calcularMovimientos = (elemento) => {
         { x:  1, y:  1 },
         { x:  1, y: -1 },
         { x: -1, y:  1 },
-        { x: -1, y: -1 }
+        { x: -1, y: -1 },
+        ...movimientosEnroque
       ].forEach(({ x, y }) => calcularMovimientoRey({
           x: posicionActual.x + x,
           y: posicionActual.y + y,
@@ -239,7 +255,7 @@ const calcularMovimientos = (elemento) => {
         { x:  2, y: -1 },
         { x: -2, y:  1 },
         { x:  2, y:  1 }
-        ].forEach(({ x, y }) => calcularMovimientoRey({
+        ].forEach(({ x, y }) => calcularMovimientoCaballo({
           x: posicionActual.x + x,
           y: posicionActual.y + y,
           })
