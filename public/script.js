@@ -23,7 +23,7 @@ const cbJugar = ({ target }) => {
   if (target.dataset.color === turno || jugadaPrevia.color === turno)
     if (!huboSeleccion && esUnDiv) dibujarPosiblesMovimientos(target) // sugerir movimientos
     else if (huboSeleccion && esUnDiv && jugadaPrevia.pieza !== target) comerPieza(target) // comer pieza
-    else if (huboSeleccion && esUnTd) moverPieza(target) // movimiento libre
+    else if (huboSeleccion && esUnTD) moverPieza(target) // movimiento libre
     else if (huboSeleccion && jugadaPrevia.pieza.dataset.tipo === 'rey') moverPieza(target) // posible enroque
     else {
       jugadaPrevia.pieza = undefined 
@@ -153,11 +153,10 @@ const calcularMovimientos = (elemento) => {
   jugadaPrevia.color = elemento.dataset.color
   jugadaPrevia.posicion = posicionActual
   jugadaPrevia.posicionesCalculadas = []
-
+  const esBlanco = jugadaPrevia.color === 'blanco'
   switch(pieza) {
     case 'peon':
-      const esBlanco = jugadaPrevia.color === 'blanco',
-            _x1 = esBlanco ? -1 : 1
+      const _x1 = esBlanco ? -1 : 1
 
       const posiblesMovimientos = [
         {
@@ -188,9 +187,8 @@ const calcularMovimientos = (elemento) => {
       break
 
     case 'rey':
-      const esBlanco = jugadaPrevia.color === 'blanco'
-      const seMovioRey = historial.find(pieza => pieza.dataset.tipo === 'rey')
-      const torresMovidas = historial.filter(pieza => pieza.dataset.tipo === 'torre')
+      const seMovioRey = historial.find(obj => obj.pieza.dataset.tipo === 'rey')
+      const torresMovidas = historial.filter(obj => obj.pieza.dataset.tipo === 'torre')
       const movimientosEnroque = []
 
       // 1_ El rey nunca se movió.
@@ -200,17 +198,20 @@ const calcularMovimientos = (elemento) => {
       // 5_ Los escaques entre el rey y la torre estén desocupados.
       // 6_ El rey no termina en jaque (válido para cualquier movimiento legal).
       if (!seMovioRey && torresMovidas.length === 0) {
-        if (esBlanco) {
-          movimientosEnroque.push({ x: 7, y: 0})
-          movimientosEnroque.push({ x: 7, y: 7})
-
-        } else {
-          movimientosEnroque.push({ x: 0, y: 0})
-          movimientosEnroque.push({ x: 0, y: 7})
-        }
+          movimientosEnroque.push({ x: 0, y: -3})
+          movimientosEnroque.push({ x: 0, y: 4})
 
       } else if (!seMovioRey && torresMovidas.length === 1) {
-        movimientosEnroque.push({ x: torresMovidas[0].x, y: torresMovidas[0].y})
+        let posicionTorreHabilitada = {}
+        for (let x = 0; x < posiciones.length; x++)
+          for (let y = 0; y < posiciones.length; y++)
+            if (posiciones[x][y] && posiciones[x][y].color === jugadaPrevia.color && posiciones[x][y].tipo === 'torre') {
+              posicionTorreHabilitada.x = x
+              posicionTorreHabilitada.y = y
+              break
+            }
+
+        movimientosEnroque.push({ x: 0, y: Math.abs(jugadaPrevia.posicion.y - posicionTorreHabilitada.y)})
       }
 
       [
