@@ -75,6 +75,7 @@ const dibujarPiezas = (posiciones, piezas, matrizTablero) => {
       div.classList.add('pieza')
       div.dataset.tipo = pieza.tipo
       div.dataset.color = pieza.color
+      div.dataset.codigo = `${fila}${columna}`
       matrizTablero[fila][columna].append(div)
     }
 }
