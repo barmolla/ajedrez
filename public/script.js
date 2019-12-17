@@ -1,11 +1,8 @@
-// IMPORTS
 const { dibujarTablero, dibujarPiezas, crearMatrizTablero } = require('./utilitarios/fn-tablero.js')
 const { piezas, obtenerPosicionesIniciales } = require('./utilitarios/fn-piezas.js')
 const Funciones = require('./utilitarios/fn-utils.js')
 
 let turno = 'blanco'
-let hayPosibilidadEnroque = false
-let torresAEnrocar = []
 const historial = []
 const posicionesIniciales = obtenerPosicionesIniciales()
 const posiciones = posicionesIniciales.dameClon()
@@ -13,9 +10,6 @@ const posiciones = posicionesIniciales.dameClon()
 const contenedor = document.querySelector('.tablero')
 const tablero = dibujarTablero(contenedor)
 const matrizTablero = crearMatrizTablero(tablero)
-
-dibujarPiezas(posicionesIniciales, piezas, crearMatrizTablero(tablero))
-
 const enrocar = target => {
   const { tipo, color } = jugadaPrevia
   const td = target.parentNode
@@ -41,11 +35,115 @@ const enrocar = target => {
   posiciones[posicionRey.x][posicionRey.y] = { tipo, color }
 }
 
-const reset = () => {
-  jugadaPrevia.pieza = undefined 
-  jugadaPrevia.color = undefined 
+const verificarJaque = (x) => {
+  // 1 buscar posición del rey cuyo color es el del jugador que le corresponde jugar
+  // 2 buscar todas las piezas del color adversario adyacentes al rey
+  // 3 por cada pieza hallada, calcular sus posibles movimientos legales y almacenarlos en un arreglo { x, y, piezaAComer? }
+  // 4 filtrar posibles movimientos piezaAComer === 'rey' y almacenarlos en un arreglo
+  // 5 si filtro > 1 jaque -> 
+  //     Si elige mover rey --> Evaluar las posiciones filtradas al calcular los movimientos legales del rey y tener en cuenta:
+  //      a. No puede enrocar estando en jaque
+  //      b. Puede comer la pieza que lo pone en jaque -> validar con paso 3 y 4
+  //      c. Puede comer otra pieza para salir del jaque -> validar con paso 3 y 4
+  //      d. Puede moverse a un escaque libre
+  //     Si elige cubrir al rey (bloqueando o comiendo con otra pieza aliada)
+  //        Por cada movimiento legal de la pieza elegida, repetir paso 3 y 4 asumiendo ese movimiento (sea moverse a un escaque libre o comer)
+  //        , si paso 4 devuelve 0, la pieza seleccionada puede efectivamente cubrir al rey sino la pieza seleccionada 
+  //        no es candidata a cubrir al rey (anular jugada)
+  //    
+  // 6 sino puede mover cualquier pieza
+
+  const rey = buscarRey()
+  const piezasAdversariasAdyacentes = buscarPiezasAdversariasAdyacentes(rey)
+
+  piezasAdversariasAdyacentes.forEach(pieza => { 
+    calcularMovimientos(pieza.el)
+    const r = jugadaPrevia.posicionesCalculadas.find(pos => {
+      const estaLibre = verificarPosicionLibre(pos)
+      const pieza = matrizTablero[pos.x][pos.y].firstElementChild
+      const esRey = !estaLibre && pieza.dataset.tipo === 'rey' && pieza.dataset.color === turno
+
+      if (esRey) return true 
+
+      return false
+    })
+
+    if (r) console.log("5 - JAQUE!!!")
+
+    jugadaPrevia = jugadaPreviaAux
+  })
+
+} 
+
+const buscarRey = () => {
+  for (let x = 0; x < matrizTablero.length; x++) {
+    for (let y = 0; y < matrizTablero[x].length; y++) {
+      const pos = matrizTablero[x][y]
+      const el = pos.firstElementChild
+
+      if (el && el.dataset.tipo === 'rey' && el.dataset.color === turno) {
+        return { x, y, el }
+      }
+    }
+  }
 }
+
+const buscarPiezasAdversariasAdyacentes = rey => {
+  const { x, y, pieza } = rey
+
+  const movimientos = [
+    { x:  0, y: -1 }, // arriba
+    { x:  0, y: 1  }, // abajo
+    { x: -1, y: 0  }, // izquierda
+    { x:  1, y: 0  }, // derecha
+    { x:  1, y: 1  }, // diagonal abajo derecha
+    { x: -1, y: 1  }, // diagonal abajo izquierda
+    { x: -1, y: -1 }, // diagonal arriba izquierda
+    { x:  1, y: -1  }, // diagonal arriba derecha
+    // movimientos del caballo
+    { x: -1, y: -2, deltaX: 0, deltaY: 0 },
+    { x:  1, y: -2, deltaX: 0, deltaY: 0 },
+    { x: -1, y:  2, deltaX: 0, deltaY: 0 },
+    { x:  1, y:  2, deltaX: 0, deltaY: 0 },
+    { x: -2, y: -1, deltaX: 0, deltaY: 0 },
+    { x:  2, y: -1, deltaX: 0, deltaY: 0 },
+    { x: -2, y:  1, deltaX: 0, deltaY: 0 },
+    { x:  2, y:  1, deltaX: 0, deltaY: 0 }
+  ];
+
+  const piezasHalladas = []
+  
+  movimientos.forEach(pos => {
+    const resultado = []
+
+    buscarAdversarioEnDireccion({ x: x + pos.x, y: y + pos.y, deltaX: pos.deltaX !== undefined ? pos.deltaX : pos.x, deltaY: pos.deltaY !== undefined ? pos.deltaY : pos.y, resultado })
+    piezasHalladas.push(...resultado)
+  })
+
+  return piezasHalladas
+}
+
+const buscarAdversarioEnDireccion = ({ x, y, deltaX, deltaY, resultado }) => {
+  // si no está dentro del tablero no hay adversario en esta dirección
+  if (!estaDentroTablero({ x, y })) return
+
+  const colorRival = dameTurnoContrario()
+  const pos = matrizTablero[x][y]
+  const el = pos.firstElementChild
+
+  // si hay una pieza y es del adversario
+  if (el && el.dataset.color === colorRival) {
+    resultado.push({ x, y, el })
+    return
+  }
+  // si hay una pieza aliada
+  else if (el && el.dataset.color === turno) return
+  // sino (si el escaque está libre y es válido) sigo buscando
+  else if (!(deltaX === 0 && deltaY === 0)) buscarAdversarioEnDireccion({ x: x + deltaX, y: y + deltaY, deltaX, deltaY, resultado }) 
+} 
+const reset = () => jugadaPrevia.pieza = jugadaPrevia.color = undefined 
 const cbJugar = ({ target }) => {
+  verificarJaque()
   const huboSeleccion = jugadaPrevia.pieza !== undefined
   const esUnDiv = target.nodeName === 'DIV'
   const esUnTD  = target.nodeName === 'TD'
@@ -73,7 +171,7 @@ const cbJugar = ({ target }) => {
       document.querySelector('.mensaje').style.display = 'none'
       div.classList.remove('mostrar-mensaje')
       caja.classList.remove('alerta')
-    }, 2000)
+    }, 1000)
   }
 }
 
@@ -82,7 +180,6 @@ const estaDentroTablero       = ({ x, y }) => x >= 0 && y >= 0 && x <= 7 && y <=
 const verificarValidez        = ({ x, y }) => jugadaPrevia.posicionesCalculadas.some(posicion => posicion.x === x && posicion.y === y)
 const verificarPosicionLibre  = ({ x, y }) => posiciones[x][y] === undefined
 const verificarMovimiento     = ({ x, y }) => verificarValidez({ x, y }) && verificarPosicionLibre({ x, y })
-//const verificarEnroque        = ({ x, y }) => verificarValidez({ x, y }) && verificarPosicionLibre({ x, y })
 const componerCapturaToma     = ({ x, y, color }) => verificarCapturaAlPaso({ x, y, color }) || puedeTomar({ x, y, color })
 const verificarCapturaAlPaso  = ({ x, y, color }) => {
   if (historial.length === 0) return false
@@ -125,7 +222,8 @@ const actualizarHistorial = div => {
   document.body.dispatchEvent(piezaComidaEvento)
 }
 
-const cambiarTurno = () => turno = (turno === 'blanco') ? 'negro' : 'blanco'
+const dameTurnoContrario = () => turno === 'blanco' ? 'negro' : 'blanco'
+const cambiarTurno = () => turno = dameTurnoContrario()
 const moverPieza = (td) => {
   const { pieza, tipo, color } = jugadaPrevia
   const posicionFutura = {
@@ -133,22 +231,14 @@ const moverPieza = (td) => {
     y: parseInt(td.dataset.y)
   }
 
-  // evaluar tipo de movimiento especial
-  // enroque corto
-  // enroque largo
-  // captura peon al paso
-  //
-  if (!hayPosibilidadEnroque) {
-    if (verificarMovimiento(posicionFutura)) {
-      cambiarTurno()
-      matrizTablero[posicionFutura.x][posicionFutura.y].append(pieza)
-      posiciones[jugadaPrevia.posicion.x][jugadaPrevia.posicion.y] = undefined
-      posiciones[posicionFutura.x][posicionFutura.y] = { tipo, color }
-      historial.push({ pieza, x: posicionFutura.x, y: posicionFutura.y })
-    }
-  } else {
-
+  if (verificarMovimiento(posicionFutura)) {
+    cambiarTurno()
+    matrizTablero[posicionFutura.x][posicionFutura.y].append(pieza)
+    posiciones[jugadaPrevia.posicion.x][jugadaPrevia.posicion.y] = undefined
+    posiciones[posicionFutura.x][posicionFutura.y] = { tipo, color }
+    historial.push({ pieza, x: posicionFutura.x, y: posicionFutura.y })
   }
+
   jugadaPrevia.pieza = undefined
 }
 
@@ -164,28 +254,33 @@ const dibujarPosiblesMovimientos = elemento => {
   calcularMovimientos(elemento)
 }
 
-const jugadaPrevia = {
+let jugadaPrevia = {
   pieza: undefined,
   tipo: undefined,
   color: undefined,
   posicion: {},
   posicionesCalculadas: []
-}
+};
+
+let jugadaPreviaAux;
 
 const calcularMovimientos = (elemento) => {
   const pieza = elemento.dataset.tipo
-
   const td = elemento.parentNode
   const posicionActual = {
     x: parseInt(td.dataset.x),
     y: parseInt(td.dataset.y)
   }
 
+  jugadaPreviaAux = Funciones.clonar()(jugadaPrevia)
   jugadaPrevia.tipo = elemento.dataset.tipo
   jugadaPrevia.color = elemento.dataset.color
+
+  const esBlanco = jugadaPrevia.color === 'blanco'
+
   jugadaPrevia.posicion = posicionActual
   jugadaPrevia.posicionesCalculadas = []
-  const esBlanco = jugadaPrevia.color === 'blanco'
+
   switch(pieza) {
     case 'peon':
       const _x1 = esBlanco ? -1 : 1
@@ -207,9 +302,10 @@ const calcularMovimientos = (elemento) => {
 
       posiblesMovimientos.push({ x: _x1, y: posicionActual.y })
 
-      if (posicionesIniciales[posicionActual.x][posicionActual.y] !== undefined) {
+      if (posicionesIniciales[posicionActual.x][posicionActual.y] !== undefined && // si no se movió
+        verificarPosicionLibre({ x: esBlanco ? posicionActual.x - 1 : posicionActual.x + 1, y: posicionActual.y})) { // si no hay piezas entre medio
         posiblesMovimientos.push({
-          x: (esBlanco) ? -2 : 2,
+          x: esBlanco ? -2 : 2,
           y: posicionActual.y
         })
       }
@@ -357,34 +453,31 @@ const calcularMovimiento = ({ x, y }) => {
   }
 }
 
-const calcularMovimientoPeon  = calcularMovimiento
-const calcularMovimientoRey   = calcularMovimientoPeon
-const calcularMovimientoAlfil = ({ x, y, deltaX, deltaY }) => {
-  const _x = x + deltaX,
-        _y = y + deltaY
-
-  if (calcularMovimiento({ x: _x, y: _y }) === true) calcularMovimientoAlfil({ x: _x, y: _y, deltaX, deltaY })
-}
+const calcularMovimientoPeon    = calcularMovimiento
+const calcularMovimientoRey     = calcularMovimientoPeon
+const calcularMovimientoAlfil   = ({ x, y, deltaX, deltaY }) => calcularMovimiento({ x: x + deltaX, y: y + deltaY }) === true  && calcularMovimientoAlfil({ x: x + deltaX, y: y + deltaY, deltaX, deltaY })
 const calcularMovimientoCaballo = calcularMovimientoRey
 const calcularMovimientoTorre   = calcularMovimientoAlfil
-const calcularMovimientoReina   = calcularMovimientoTorre
+const calcularMovimientoReina   = calcularMovimientoTorre;
 
-tablero.addEventListener('click', cbJugar)
+// Inicialización
+(() => {
+  dibujarPiezas(posicionesIniciales, piezas, matrizTablero)
+  tablero.addEventListener('click', cbJugar)
 
-document
-  .querySelector('form')
-  .addEventListener('submit', e => {
-    e.preventDefault()
-    document.querySelector('form').append('Registrado!')
-    setTimeout(() => document.querySelector('form').style.display = 'none', 3000)
-  })
-
-document.body.addEventListener('piezaComida', ({ detail }) => {
-  const color = detail.piezaComida.dataset.color
-  const clase = `.historial-${color}`
   document
-    .querySelector(clase)
-    .append(detail.piezaComida)
-})
-
-console.clear()
+    .querySelector('form')
+    .addEventListener('submit', e => {
+      e.preventDefault()
+      document.querySelector('form').append('Registrado!')
+      setTimeout(() => document.querySelector('form').style.display = 'none', 3000)
+    })
+  
+  document.body.addEventListener('piezaComida', ({ detail }) => {
+    const color = detail.piezaComida.dataset.color
+    const clase = `.historial-${color}`
+    document
+      .querySelector(clase)
+      .append(detail.piezaComida)
+  })
+})(tablero, cbJugar, posicionesIniciales, piezas, matrizTablero);
