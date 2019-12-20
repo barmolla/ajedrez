@@ -460,17 +460,6 @@ const calcularMovimientos = (elemento) => {
         ...movimientosEnroque
       ]
 
-      /*if (hayJaque) {
-        verificarJaque()
-        opc = opc.filter(pos => {
-          if (posiblesMovimientosDelRey.find(pm => pm.x === posicionActual.x + pos.x && pm.y === posicionActual.y)) {
-            return true
-          } 
-          
-          return false
-        })
-      }*/
-
       opc.forEach(({ x, y }) => calcularMovimientoRey({ x: posicionActual.x + x, y: posicionActual.y + y}))
       posiblesMovimientosDelRey = []
       hayJaque = false
