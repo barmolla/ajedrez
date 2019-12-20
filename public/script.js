@@ -98,6 +98,7 @@ const verificarJaque = (x) => {
       }
     }
 
+    //piezasQueProvocanJaque = []
     jugadaPrevia = jugadaPreviaAux
   })
 } 
@@ -460,9 +461,28 @@ const calcularMovimientos = (elemento) => {
         ...movimientosEnroque
       ]
 
+<<<<<<< HEAD
       opc.forEach(({ x, y }) => calcularMovimientoRey({ x: posicionActual.x + x, y: posicionActual.y + y}))
       posiblesMovimientosDelRey = []
       hayJaque = false
+=======
+      if (hayJaque) {
+        opc = opc.filter(pos => {
+          if (posiblesMovimientosDelRey.find(pm => pm.x === posicionActual.x + pos.x && pm.y === posicionActual.y)) {
+            return true
+          } 
+          
+          return false
+          //posiblesMovimientosDelRey.includes({ x: posicionActual.x + pos.x, y: posicionActual.y + pos.y}) ? true : false
+        })
+      }
+
+      opc.forEach(({ x, y }) => calcularMovimientoRey({
+          x: posicionActual.x + x,
+          y: posicionActual.y + y,
+          })
+        )
+>>>>>>> 710ef72b28c7c3df4a8daa0b24b87aa06c7eb9f5
       break
 
     case 'reina':
