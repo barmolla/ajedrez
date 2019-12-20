@@ -3,6 +3,7 @@ const { piezas, obtenerPosicionesIniciales } = require('./utilitarios/fn-piezas.
 const Funciones = require('./utilitarios/fn-utils.js')
 
 let turno = 'blanco'
+let hayJaque = false
 const historial = []
 const posicionesIniciales = obtenerPosicionesIniciales()
 const posiciones = posicionesIniciales.dameClon()
@@ -23,7 +24,7 @@ const enrocar = target => {
     y: jugadaPrevia.posicion.y
   }
 
-  if (!verificarValidez(posicionTorre) || torre.dataset.tipo !=='torre') {
+  if (!verificarValidez(posicionTorre) || torre.dataset.tipo !=='torre' || hayJaque) {
     reset()
     return
   } 
@@ -34,6 +35,9 @@ const enrocar = target => {
   posiciones[jugadaPrevia.posicion.x][jugadaPrevia.posicion.y] = undefined
   posiciones[posicionRey.x][posicionRey.y] = { tipo, color }
 }
+
+let piezasQueProvocanJaque = []
+let posiblesMovimientosDelRey = []
 
 const verificarJaque = (x) => {
   // 1 buscar posición del rey cuyo color es el del jugador que le corresponde jugar
@@ -58,22 +62,95 @@ const verificarJaque = (x) => {
 
   piezasAdversariasAdyacentes.forEach(pieza => { 
     calcularMovimientos(pieza.el)
-    const r = jugadaPrevia.posicionesCalculadas.find(pos => {
+    revertirColores()
+    console.log("primera verificacion jugadaPrevia.posicionesCalculadas")
+    console.log(jugadaPrevia.posicionesCalculadas)
+    
+    jugadaPrevia.posicionesCalculadas.forEach(pos => {// puede que sea un find
       const estaLibre = verificarPosicionLibre(pos)
       const pieza = matrizTablero[pos.x][pos.y].firstElementChild
       const esRey = !estaLibre && pieza.dataset.tipo === 'rey' && pieza.dataset.color === turno
 
-      if (esRey) return true 
-
-      return false
+      if (esRey) {
+        piezasQueProvocanJaque.push({ el: pieza })
+      } 
     })
 
-    if (r) console.log("5 - JAQUE!!!")
+    console.log("piezasQueProvocanJaque")
+    console.log(piezasQueProvocanJaque)
+
+    
+    if (piezasQueProvocanJaque.length > 0) {
+      // posibles movimientos del rey significa que
+      // los movimientos que estén disponibles no son inválidados por jaques consecuentes
+      // por cada movimiento posible, asumir esa posición y evaluar 
+      // cada pieza que provocaba jaque si lo sigue provocando
+      posiblesMovimientosDelRey = buscarPosiblesMovimientosDelRey(rey)
+
+      if (posiblesMovimientosDelRey.length === 0) {
+        alert("JAQUE MATE !!!")
+        console.log("JAQUE MATE !!!")
+
+      } else {
+        alert("JAQUE !!!")
+        console.log("JAQUE !!!")
+        hayJaque = true
+      }
+    }
 
     jugadaPrevia = jugadaPreviaAux
   })
-
 } 
+
+const buscarPosiblesMovimientosDelRey = (rey) => {
+  console.log("piezasQueProvocanJaque")
+  console.log(piezasQueProvocanJaque)
+  console.log("rey")
+  console.log(rey)
+
+  calcularMovimientos(rey.el)
+  revertirColores()
+  console.log("jugadaPrevia.posicionesCalculadas")
+  console.log(jugadaPrevia.posicionesCalculadas)
+
+  const movimientosLegalesDelRey = jugadaPrevia.posicionesCalculadas
+  const posiblesMovimientosDelRey = []
+
+  piezasQueProvocanJaque.forEach(pieza => {
+    //const pieza = matrizTablero[pos.x][pos.y].firstElementChild
+    calcularMovimientos(pieza.el)
+    revertirColores()
+    const movimientosPiezasDeJaque = jugadaPrevia.posicionesCalculadas
+    const diff = movimientosLegalesDelRey.filter(pos => {
+      if (movimientosPiezasDeJaque.includes(pos)) return false
+
+      return true
+    })
+
+    posiblesMovimientosDelRey.push(...diff)
+    // por cada movimiento legal del rey
+    // simular esa posición y volver a verificar jaque
+    // si hay jaque, ese movimiento se anula
+    // sino, se agrega a la colección de movimientos posibles para luego chequear al mover la pieza
+    /*const resultado = jugadaPrevia.posicionesCalculadas.filter((posLegalesRey) =>{
+      if (posLegalesRey.x === posJaqueAlRey.x &&
+          posLegalesRey.y === posJaqueAlRey.y) {
+        return false
+      }
+
+      return true
+    })
+
+    console.log("resultado")
+    console.log(resultado)
+    posiblesMovimientosDelRey.push(...resultado)
+*/
+  })
+
+  console.log(posiblesMovimientosDelRey)
+
+  return posiblesMovimientosDelRey
+}
 
 const buscarRey = () => {
   for (let x = 0; x < matrizTablero.length; x++) {
@@ -138,25 +215,39 @@ const buscarAdversarioEnDireccion = ({ x, y, deltaX, deltaY, resultado }) => {
   }
   // si hay una pieza aliada
   else if (el && el.dataset.color === turno) return
-  // sino (si el escaque está libre y es válido) sigo buscando
+  // sino (si el escaque está libre y es válido, se contempla deltas 0 para evitar recursividad en el movimiento del caballo) sigo buscando
   else if (!(deltaX === 0 && deltaY === 0)) buscarAdversarioEnDireccion({ x: x + deltaX, y: y + deltaY, deltaX, deltaY, resultado }) 
 } 
 const reset = () => jugadaPrevia.pieza = jugadaPrevia.color = undefined 
 const cbJugar = ({ target }) => {
-  verificarJaque()
   const huboSeleccion = jugadaPrevia.pieza !== undefined
   const esUnDiv = target.nodeName === 'DIV'
   const esUnTD  = target.nodeName === 'TD'
-
+  
   revertirColores()
-  if (target.dataset.color === turno || jugadaPrevia.color === turno)
-    if (!huboSeleccion && esUnDiv) dibujarPosiblesMovimientos(target) // sugerir movimientos
-    else if (huboSeleccion && esUnDiv && jugadaPrevia.pieza !== target && jugadaPrevia.pieza.dataset.tipo !== 'rey') comerPieza(target) // comer pieza
-    else if (huboSeleccion && esUnTD) moverPieza(target) // movimiento libre
-    else if (huboSeleccion && jugadaPrevia.pieza.dataset.tipo === 'rey') enrocar(target) // posible enroque
-    else reset()
+  if (target.dataset.color === turno || jugadaPrevia.color === turno) {
+    if (!huboSeleccion && esUnDiv) { // sugerir movimientos
+      dibujarPosiblesMovimientos(target) 
+
+    } else if (huboSeleccion && esUnDiv && jugadaPrevia.pieza !== target && jugadaPrevia.pieza.dataset.tipo !== 'rey') { // comer pieza
+      comerPieza(target)
+      verificarJaque()
+      revertirColores() 
+
+    } else if (huboSeleccion && esUnTD) { // movimiento libre
+      moverPieza(target) 
+      verificarJaque()
+      revertirColores() 
+
+    } else if (huboSeleccion && jugadaPrevia.pieza.dataset.tipo === 'rey') { // posible enroque
+      enrocar(target)
+
+    } else { // reiniciar jugada previa
+      reset()
+    }
+  }
   else { // jugador equivocado
-    const div = document.querySelector('.mensaje')
+    /*const div = document.querySelector('.mensaje')
     const caja = document.querySelector('.caja')
     const label = document.querySelector('.mensaje label')
 
@@ -165,13 +256,13 @@ const cbJugar = ({ target }) => {
     caja.classList.add('alerta')
 
     caja.append(label)
-    label.innerHTML = 'Turno de color ' + turno
-
-    setTimeout(() => {
+    label.innerHTML = 'Turno de color ' + turno*/
+    alert("Turno de color " + turno)
+    /*setTimeout(() => {
       document.querySelector('.mensaje').style.display = 'none'
       div.classList.remove('mostrar-mensaje')
       caja.classList.remove('alerta')
-    }, 1000)
+    }, 1000)*/
   }
 }
 
@@ -325,37 +416,39 @@ const calcularMovimientos = (elemento) => {
       // 4_ Ninguno de los escaques por los que el rey pasará o quedará, está bajo ataque.
       // 5_ Los escaques entre el rey y la torre estén desocupados.
       // 6_ El rey no termina en jaque (válido para cualquier movimiento legal).
-      if (!seMovioRey) { // 1
-        const posicionesIzq = [1, 2]
-        const posicionesDer = [4, 5, 6]
-
-        if (torresMovidas.length === 0) { // 2
-          if ([...posicionesDer].every(y => Object.values(posiciones[coordX])[y] === undefined)) {  // 5
-            movimientosEnroque.push({ x: 0, y: 4 })
-          }
-
-          if ([...posicionesIzq].every(y => Object.values(posiciones[coordX])[y] === undefined)) { // 5
-            movimientosEnroque.push({ x: 0, y: -3 })
-          }
-        } else {
-          const izq = torresMovidas.find(t => t.pieza.dataset.codigo === '70' || t.pieza.dataset.codigo === '00')
-          const der = torresMovidas.find(t => t.pieza.dataset.codigo === '77' || t.pieza.dataset.codigo === '07')
-
-          if (! (izq && der)) { // Si no se movieron ambas torres
-            if (izq && !der) { // Si no se movió la torre derecha
-              if ([...posicionesDer].every(y => Object.values(posiciones[coordX])[y] === undefined)) {  // 5
-                movimientosEnroque.push({ x: 0, y: 4 })
-              }
-            } else { // Si no se movió la torre izquierda                
-              if ([...posicionesIzq].every(y => Object.values(posiciones[coordX])[y] === undefined)) { // 5
-                movimientosEnroque.push({ x: 0, y: -3 })
+      if(!hayJaque) {
+        if (!seMovioRey) { // 1
+          const posicionesIzq = [1, 2]
+          const posicionesDer = [4, 5, 6]
+  
+          if (torresMovidas.length === 0) { // 2
+            if ([...posicionesDer].every(y => Object.values(posiciones[coordX])[y] === undefined)) {  // 5
+              movimientosEnroque.push({ x: 0, y: 4 })
+            }
+  
+            if ([...posicionesIzq].every(y => Object.values(posiciones[coordX])[y] === undefined)) { // 5
+              movimientosEnroque.push({ x: 0, y: -3 })
+            }
+          } else {
+            const izq = torresMovidas.find(t => t.pieza.dataset.codigo === '70' || t.pieza.dataset.codigo === '00')
+            const der = torresMovidas.find(t => t.pieza.dataset.codigo === '77' || t.pieza.dataset.codigo === '07')
+  
+            if (! (izq && der)) { // Si no se movieron ambas torres
+              if (izq && !der) { // Si no se movió la torre derecha
+                if ([...posicionesDer].every(y => Object.values(posiciones[coordX])[y] === undefined)) {  // 5
+                  movimientosEnroque.push({ x: 0, y: 4 })
+                }
+              } else { // Si no se movió la torre izquierda                
+                if ([...posicionesIzq].every(y => Object.values(posiciones[coordX])[y] === undefined)) { // 5
+                  movimientosEnroque.push({ x: 0, y: -3 })
+                }
               }
             }
           }
-        }
-      } 
+        } 
+      }
 
-      [
+      let opc = [
         { x:  1, y:  0 },
         { x:  0, y:  1 },
         { x: -1, y:  0 },
@@ -365,11 +458,22 @@ const calcularMovimientos = (elemento) => {
         { x: -1, y:  1 },
         { x: -1, y: -1 },
         ...movimientosEnroque
-      ].forEach(({ x, y }) => calcularMovimientoRey({
-          x: posicionActual.x + x,
-          y: posicionActual.y + y,
-          })
-        )
+      ]
+
+      /*if (hayJaque) {
+        verificarJaque()
+        opc = opc.filter(pos => {
+          if (posiblesMovimientosDelRey.find(pm => pm.x === posicionActual.x + pos.x && pm.y === posicionActual.y)) {
+            return true
+          } 
+          
+          return false
+        })
+      }*/
+
+      opc.forEach(({ x, y }) => calcularMovimientoRey({ x: posicionActual.x + x, y: posicionActual.y + y}))
+      posiblesMovimientosDelRey = []
+      hayJaque = false
       break
 
     case 'reina':
